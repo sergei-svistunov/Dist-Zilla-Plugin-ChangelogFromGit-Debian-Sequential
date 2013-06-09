@@ -1,0 +1,115 @@
+package Dist::Zilla::Plugin::ChangelogFromGit::Debian::Sequential;
+
+# ABSTRACT: Add changelog entries into debain/changelog
+
+use Debian::Control;
+use Dpkg::Changelog::Parse;
+use Moose;
+
+use Dist::Zilla::File::InMemory;
+
+use DateTime::Format::Mail;
+use Text::Wrap qw(wrap fill);
+
+extends 'Dist::Zilla::Plugin::ChangelogFromGit';
+with 'Dist::Zilla::Role::AfterRelease';
+
+override file_name => sub {'debian/changelog'};
+
+sub render_changelog {
+    my ($self) = @_;
+
+    my ($pkg_name, $pkg_distr, $prev_version, $content);
+
+    my $changelog_file = $self->_get_file('debian/changelog');
+    if ($changelog_file) {
+        my $changelog = changelog_parse(file => $changelog_file->_original_name);
+        ($pkg_name, $pkg_distr, $prev_version) = map {$changelog->{$_}} qw(Source Version Distribution);
+        $content = $changelog_file->content;
+    } else {
+        my $control = Debian::Control->new();
+
+        my $control_file = $self->_get_file('debian/control');
+        $self->logger->log_fatal("File 'debian/control' does not exist") unless $control_file;
+
+        $control->read($control_file->_original_name);
+
+        $pkg_name  = $control->source->Source;
+        $pkg_distr = `lsb_release -cs`;
+        chomp($pkg_distr);
+
+        $prev_version = '';
+
+        $content = '';
+    }
+
+    local $Text::Wrap::huge    = 'wrap';
+    local $Text::Wrap::columns = $self->wrap_column();
+
+    $self->logger->log_fatal('Unsetted envirement variable DEBFULLNAME') unless $ENV{'DEBFULLNAME'};
+    $self->logger->log_fatal('Unsetted envirement variable DEBEMAIL') unless $ENV{'DEBEMAIL'};
+
+    foreach my $release ($self->all_releases) {
+        next if $release->has_no_changes && $release->version ne 'HEAD';
+        next if $release->version le $prev_version;
+
+        my @changes = map {
+            my $text = $_->description;
+            chomp($text);
+            fill('  * ', '    ', $text);
+        } @{$release->changes};
+
+        my $version = $release->version;
+        $version = $self->zilla->version if $version eq 'HEAD';
+
+        $content =
+            "$pkg_name ($version) $pkg_distr; urgency=low\n\n"
+          . join("\n\n", @changes) . "\n\n"
+          . " -- $ENV{'DEBFULLNAME'} <$ENV{'DEBEMAIL'}>  "
+          . DateTime::Format::Mail->format_datetime($release->date->clone->set_time_zone('local'))
+          . "\n\n$content";
+    }
+
+    return $content;
+}
+
+sub after_release {
+    my ($self) = @_;
+
+    my $fn = $self->zilla->root . "/debian/changelog";
+    open(my $fh, '>', $fn) || $self->logger->log_fatal("Cannot write into '$fn': $!");
+    print $fh $self->_get_file('debian/changelog')->content;
+    close($fh);
+}
+
+sub _get_file {
+    my ($self, $name) = @_;
+
+    return [grep {$_->name eq $name} @{$self->zilla->files}]->[0];
+}
+
+1;
+
+__END__
+
+=pod
+
+=head1 NAME
+
+Dist::Zilla::Plugin::ChangelogFromGit::Debian::Sequential - Sequential Debian formatter for Changelogs
+
+=head1 SYNOPSIS
+
+    [ChangelogFromGit::Debian::Sequential]
+    [@Git]
+
+=head1 DESCRIPTION
+
+ChangelogFromGit::Debian::Sequential extends L<Dist::Zilla::Plugin::ChangelogFromGit> to create/update Debian changelog.
+It does not recreate changelog every time like L<Dist::Zilla::Plugin::ChangelogFromGit::Debian>.
+
+=head1 AUTHOR
+
+Sergei Svistunov <svistunov@yandex.ru>
+
+=cut
