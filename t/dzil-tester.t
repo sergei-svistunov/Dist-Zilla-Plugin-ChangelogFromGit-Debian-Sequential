@@ -7,8 +7,6 @@ use Test::DZil;
 use Git::Wrapper;
 use File::pushd qw(pushd);
 
-use DDP;
-
 my ($zilla, $pushd);
 
 sub init_zilla {
