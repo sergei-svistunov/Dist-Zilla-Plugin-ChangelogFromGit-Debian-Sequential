@@ -72,12 +72,15 @@ sub init_zilla {
 
     if ($version == 2) {
         $git->tag('0.1');
+        $git->checkout(-b => 'fix_gitignore');
         system "echo .proverc >>.gitignore";
         open(my $fh, '>', 'debian/changelog') || die "Cannot create file 'debian/changelog': $!";
         print $fh $FIRST_RELEASE_CHANGELOG;
         close($fh);
         $git->add(-f => '.gitignore', 'debian/changelog');
         $git->commit({message => 'Fixed .gitignore'});
+        $git->checkout('master');
+        $git->merge('--no-ff', 'fix_gitignore');
     }
 }
 

@@ -47,17 +47,21 @@ sub render_changelog {
     local $Text::Wrap::columns = $self->wrap_column();
 
     $self->logger->log_fatal('Unsetted envirement variable DEBFULLNAME') unless $ENV{'DEBFULLNAME'};
-    $self->logger->log_fatal('Unsetted envirement variable DEBEMAIL') unless $ENV{'DEBEMAIL'};
+    $self->logger->log_fatal('Unsetted envirement variable DEBEMAIL')    unless $ENV{'DEBEMAIL'};
 
     foreach my $release ($self->all_releases) {
         next if $release->has_no_changes && $release->version ne 'HEAD';
         next if $release->version le $prev_version;
 
-        my @changes = map {
-            my $text = $_->description;
+        my @changes;
+        foreach my $change (@{$release->changes}) {
+            # Ignoring merges
+            next if Git::Repository::Log::Iterator->new($change->change_id)->next->parent > 1;
+
+            my $text = $change->description;
             chomp($text);
-            fill('  * ', '    ', $text);
-        } @{$release->changes};
+            push(@changes, fill('  * ', '    ', $text));
+        }
 
         my $version = $release->version;
         $version = $self->zilla->version if $version eq 'HEAD';
