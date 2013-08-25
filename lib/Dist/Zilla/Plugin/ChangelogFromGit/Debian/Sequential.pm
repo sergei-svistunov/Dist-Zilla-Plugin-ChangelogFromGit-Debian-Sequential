@@ -24,7 +24,7 @@ sub render_changelog {
     my $changelog_file = $self->_get_file('debian/changelog');
     if ($changelog_file) {
         my $changelog = changelog_parse(file => $changelog_file->_original_name);
-        ($pkg_name, $pkg_distr, $prev_version) = map {$changelog->{$_}} qw(Source Version Distribution);
+        ($pkg_name, $pkg_distr, $prev_version) = map {$changelog->{$_}} qw(Source Distribution Version);
         $content = $changelog_file->content;
     } else {
         my $control = Debian::Control->new();
@@ -80,6 +80,18 @@ sub after_release {
     open(my $fh, '>', $fn) || $self->logger->log_fatal("Cannot write into '$fn': $!");
     print $fh $self->_get_file('debian/changelog')->content;
     close($fh);
+}
+
+sub add_file {
+    my ($self, $file) = @_;
+
+    if (my $added_file = $self->_get_file($file->name)) {
+        $added_file->content($file->content);
+    } else {
+        return $self->SUPER::add_file($file);
+    }
+
+    return;
 }
 
 sub _get_file {
