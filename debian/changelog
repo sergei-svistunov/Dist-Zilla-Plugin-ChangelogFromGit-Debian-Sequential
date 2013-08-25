@@ -1,3 +1,11 @@
+libdist-zilla-plugin-changelogfromgit-debian-sequential-perl (0.2-1) raring; urgency=low
+
+  * Added ignoring merges
+
+  * Fixed bug with duplicate gathered files
+ 
+ -- Sergei Svistunov <sergei-svistunov@yandex.ru>  Sun, 25 Aug 2013 19:29:39 +0400
+
 libdist-zilla-plugin-changelogfromgit-debian-sequential-perl (0.1-1) unstable; urgency=low
 
   * Initial Release.
