@@ -1,3 +1,9 @@
+libdist-zilla-plugin-changelogfromgit-debian-sequential-perl (0.4) raring; urgency=low
+
+  * Fixed version compares
+
+ -- Sergei Svistunov <sergei-svistunov@yandex.ru>  Mon, 16 Sep 2013 15:03:18 +0400
+
 libdist-zilla-plugin-changelogfromgit-debian-sequential-perl (0.3-1) raring; urgency=low
 
   *  Fixed to many process
