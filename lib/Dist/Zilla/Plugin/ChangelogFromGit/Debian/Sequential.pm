@@ -2,17 +2,18 @@ package Dist::Zilla::Plugin::ChangelogFromGit::Debian::Sequential;
 
 # ABSTRACT: Add changelog entries into debain/changelog
 
+use Moose;
+extends 'Dist::Zilla::Plugin::ChangelogFromGit';
+with 'Dist::Zilla::Role::AfterRelease';
+
 use Debian::Control;
 use Dpkg::Changelog::Parse;
-use Moose;
 
 use Dist::Zilla::File::InMemory;
 
 use DateTime::Format::Mail;
 use Text::Wrap qw(wrap fill);
-
-extends 'Dist::Zilla::Plugin::ChangelogFromGit';
-with 'Dist::Zilla::Role::AfterRelease';
+use version;
 
 override file_name => sub {'debian/changelog'};
 
@@ -38,10 +39,12 @@ sub render_changelog {
         $pkg_distr = `lsb_release -cs`;
         chomp($pkg_distr);
 
-        $prev_version = '';
+        $prev_version = '0';
 
         $content = '';
     }
+
+    $prev_version = version->parse($prev_version);
 
     local $Text::Wrap::huge    = 'wrap';
     local $Text::Wrap::columns = $self->wrap_column();
@@ -51,7 +54,7 @@ sub render_changelog {
 
     foreach my $release ($self->all_releases) {
         next if $release->has_no_changes && $release->version ne 'HEAD';
-        next if $release->version le $prev_version;
+        next if $release->version ne 'HEAD' && $release->version <= version->parse($prev_version);
 
         my @changes;
         foreach my $change (@{$release->changes}) {
