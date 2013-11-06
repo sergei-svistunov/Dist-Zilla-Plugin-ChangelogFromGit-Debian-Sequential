@@ -66,7 +66,7 @@ sub render_changelog {
 
             my $text = $change->description;
             chomp($text);
-            push(@changes, fill('  * ', '    ', $text));
+            push(@changes, fill('  * ', '    ', $text || 'No changes'));
         }
 
         my $version = $release->version;
