@@ -1,3 +1,9 @@
+libdist-zilla-plugin-changelogfromgit-debian-sequential-perl (0.6) saucy; urgency=low
+
+  * Fixed release with empty changes
+
+ -- Sergei Svistunov <sergei-svistunov@yandex.ru>  Thu, 16 Jan 2014 20:02:44 +0400
+
 libdist-zilla-plugin-changelogfromgit-debian-sequential-perl (0.5) saucy; urgency=low
 
   * Fixed empty changelog
