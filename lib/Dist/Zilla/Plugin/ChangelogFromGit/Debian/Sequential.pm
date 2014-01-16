@@ -74,7 +74,7 @@ sub render_changelog {
 
         $content =
             "$pkg_name ($version) $pkg_distr; urgency=low\n\n"
-          . join("\n\n", @changes || '  * No changes') . "\n\n"
+          . join("\n\n", @changes ? @changes : '  * No changes') . "\n\n"
           . " -- $ENV{'DEBFULLNAME'} <$ENV{'DEBEMAIL'}>  "
           . DateTime::Format::Mail->format_datetime($release->date->clone->set_time_zone('local'))
           . "\n\n$content";
