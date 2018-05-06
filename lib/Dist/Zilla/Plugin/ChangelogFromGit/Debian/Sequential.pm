@@ -44,7 +44,7 @@ sub render_changelog {
         $content = '';
     }
 
-    $prev_version = version->parse($prev_version);
+    $prev_version = version->parse(ref($prev_version) ? $prev_version->version : $prev_version);
 
     local $Text::Wrap::huge    = 'wrap';
     local $Text::Wrap::columns = $self->wrap_column();
